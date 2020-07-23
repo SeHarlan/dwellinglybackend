@@ -1,5 +1,6 @@
+from sqlalchemy.orm import relationship
 from db import db
-from models.user import UserModel
+from models.tenant import TenantModel
 
 class PropertyModel(db.Model):
     __tablename__ = "properties"
@@ -11,23 +12,27 @@ class PropertyModel(db.Model):
     state = db.Column(db.String(50))
     zipcode = db.Column(db.String(20))
     propertyManager = db.Column(db.Integer(), db.ForeignKey('users.id'))
-    tenants = db.Column(db.Integer())
     dateAdded = db.Column(db.String(50))
     archived = db.Column(db.Boolean)
 
+    tenants = db.relationship(TenantModel, backref="property")
 
-    def __init__(self, name, address, city, state, zipcode, propertyManager, tenants, dateAdded, archived):
+
+    def __init__(self, name, address, city, state, zipcode, propertyManager, dateAdded, archived):
         self.name = name
         self.address = address
         self.city = city
         self.state = state
         self.zipcode = zipcode
         self.propertyManager = propertyManager
-        self.tenants = tenants
         self.dateAdded = dateAdded
         self.archived = False
 
     def json(self):
+        property_tenants = []
+        for tenant in self.tenants:
+            property_tenants.append(tenant.json())
+
         return {
             'id': self.id, 
             'name':self.name, 
@@ -36,7 +41,7 @@ class PropertyModel(db.Model):
             'state': self.state, 
             'zipcode': self.zipcode,
             'propertyManager': self.propertyManager,
-            'tenants': self.tenants,
+            'tenants': property_tenants,
             'dateAdded': self.dateAdded,
             'archived': self.archived
         }
